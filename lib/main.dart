@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(ChangeNotifierProvider(
-      create: (context) => GameProvider(columns: 9, rows: 9),
+      create: (context) => GameProvider(columns: 9, rows: 9, totalSquares: 9*9),
       child: const MyApp(),
     )
   );

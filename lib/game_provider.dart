@@ -9,24 +9,27 @@ class GameProvider extends ChangeNotifier {
   final Random _random = Random();
   late int fruitIndex;
   late int headIndex;
-  List<int> snakeBody = [];
   late Direction currDirection;
+  int totalSquares;
+  List<int> snakeBody = [];
   int columns;
   int rows;
 
-  GameProvider({required this.columns, required this.rows}) {
-    currDirection = Direction.Up;
+  GameProvider({required this.columns, required this.rows, required this.totalSquares}) {
     fruitIndex = 0;
     headIndex = 0;
+    initializeSnake(totalSquares);
+    initializeFruit(totalSquares);
+    currDirection = Direction.Left;
   }
 
   void initializeGame() {
     int totalSquares = columns * rows;
-    getRandomIndex(totalSquares);
+    initializeFruit(totalSquares);
     initializeSnake(totalSquares);
   }
 
-  void getRandomIndex(int totalSquares) {
+  void initializeFruit(int totalSquares) {
     do {
       fruitIndex = _random.nextInt(totalSquares);
     } while (snakeBody.contains(fruitIndex));
@@ -53,36 +56,57 @@ class GameProvider extends ChangeNotifier {
   }
 
   void changeDirection(Direction newDirection) {
-    if ((currDirection == Direction.Up && newDirection != Direction.Down) ||
-        (currDirection == Direction.Down && newDirection != Direction.Up) ||
-        (currDirection == Direction.Left && newDirection != Direction.Right) ||
-        (currDirection == Direction.Right && newDirection != Direction.Left)) {
+    bool canChangeDirection = false;
+
+    switch (newDirection) {
+      case Direction.Up:
+        if (currDirection != Direction.Down && headIndex >= columns) {
+          canChangeDirection = true;
+        }
+        break;
+      case Direction.Down:
+        if (currDirection != Direction.Up && headIndex < columns * (rows - 1)) {
+          canChangeDirection = true;
+        }
+        break;
+      case Direction.Left:
+        if (currDirection != Direction.Right && headIndex % columns != 0) {
+          canChangeDirection = true;
+        }
+        break;
+      case Direction.Right:
+        if (currDirection != Direction.Left && (headIndex + 1) % columns != 0) {
+          canChangeDirection = true;
+        }
+        break;
+    }
+
+    if (canChangeDirection) {
       currDirection = newDirection;
       moveSnake();
     }
+    print(currDirection.name);
   }
 
   void moveSnake() {
+    int newHeadIndex = headIndex;
+
     switch (currDirection) {
       case Direction.Up:
-        // if(headIndex <= columns-1) // if the top of the board has been reached, prevent the snake from leaving the board
-        //   break;
-        headIndex = headIndex - columns;
+        newHeadIndex = headIndex - columns;
         break;
       case Direction.Down:
-        // int lastRow = rows*columns;
-        // if(((lastRow-9)-1) <= lastRow-1) // if the bottom of the board has been reached, prevent the snake from leaving the board
-        //   break;
-        headIndex = headIndex + columns;
+        newHeadIndex = headIndex + columns;
         break;
       case Direction.Left:
-        headIndex = headIndex - 1;
+        newHeadIndex = headIndex - 1;
         break;
       case Direction.Right:
-        headIndex = headIndex + 1;
+        newHeadIndex = headIndex + 1;
         break;
     }
 
+    headIndex = newHeadIndex;
     snakeBody.insert(0, headIndex);
     snakeBody.removeLast();
     notifyListeners();
