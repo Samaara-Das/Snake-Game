@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'board.dart';
 import 'game_provider.dart';
+import 'controls.dart';
 import 'package:provider/provider.dart';
 
 class SnakeGamePage extends StatefulWidget {
@@ -20,9 +21,15 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
       body: Center(
         child: Consumer<GameProvider>(
           builder: (context, game, child) => Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Board(columns: 8, rows: 8, width: 400, height: 400),
-
+              Board(columns: game.columns, rows: game.columns, size:400),
+              Controls(
+                  onUpPressed: () => game.changeDirection(Direction.Up),
+                  onDownPressed: () => game.changeDirection(Direction.Down),
+                  onLeftPressed: () => game.changeDirection(Direction.Left),
+                  onRightPressed: () => game.changeDirection(Direction.Right)
+              )
             ],
           ),
         )

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(ChangeNotifierProvider(
-      create: (context) => GameProvider(),
+      create: (context) => GameProvider(columns: 9, rows: 9),
       child: const MyApp(),
     )
   );
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       title: 'Snake Game',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent, brightness: Brightness.dark),
         useMaterial3: true,
       ),
       home: const SnakeGamePage(title: 'Snake Game'),

@@ -3,30 +3,42 @@ import 'package:provider/provider.dart';
 import 'game_provider.dart';
 import 'fruit.dart';
 
-class Board extends StatelessWidget {
+
+class Board extends StatefulWidget {
   int columns;
   int rows;
   late int totalSquares;
-  double width;
-  double height;
+  double size;
   
-  Board({super.key, required this.columns, required this.rows, required this.width, required this.height}) {
+  Board({super.key, required this.columns, required this.rows, required this.size}) {
     this.totalSquares = rows * columns;
+  }
+
+  @override
+  State<Board> createState() => _BoardState();
+}
+
+class _BoardState extends State<Board> {
+  @override
+  void initState() {
+    super.initState();
+    // Use WidgetsBinding.instance.addPostFrameCallback to run code after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<GameProvider>().initializeGame();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: width,
-      height: height,
+      width: widget.size,
+      height: widget.size,
       child: Consumer<GameProvider>(
         builder: (context, game, child) {
-          game.getRandomIndex(totalSquares);
-
           return GridView.builder(
-            physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: columns),
-            itemCount: totalSquares,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: widget.columns),
+            itemCount: widget.totalSquares,
             itemBuilder: (context, index) {
               return Container(
                 decoration: BoxDecoration(
@@ -34,7 +46,7 @@ class Board extends StatelessWidget {
                   color: Colors.green,
                   border: Border.all(color: Colors.green.shade800, width: 1.5),
                 ),
-                child: game.fruitIndex == index ? Fruit() : null,
+                child: game.fruitIndex == index ? const Fruit() : game.snakeBody.contains(index) ? game.getSnakePart(index) : null,
               );
             },
           );
