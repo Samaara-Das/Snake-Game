@@ -30,10 +30,10 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                 children: [
                   Board(columns: game.columns, rows: game.columns, size:400),
                   Controls(
-                      onUpPressed: () => game.changeDirection(Direction.Up),
-                      onDownPressed: () => game.changeDirection(Direction.Down),
-                      onLeftPressed: () => game.changeDirection(Direction.Left),
-                      onRightPressed: () => game.changeDirection(Direction.Right)
+                      onUpPressed: () => game.clickedDirection = Direction.Up,
+                      onDownPressed: () => game.clickedDirection = Direction.Down,
+                      onLeftPressed: () => game.clickedDirection = Direction.Left,
+                      onRightPressed: () => game.clickedDirection = Direction.Right
                   )
                 ],
               ),

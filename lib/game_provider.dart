@@ -1,15 +1,16 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'snake.dart';
-import 'package:provider/provider.dart';
 
-enum Direction {Up, Down, Left, Right}
+enum Direction {Up, Down, Left, Right, Still}
 
 class GameProvider extends ChangeNotifier {
   final Random _random = Random();
   late int fruitIndex;
   late int headIndex;
   late Direction currDirection;
+  late Direction clickedDirection;
   int totalSquares;
   List<int> snakeBody = [];
   int columns;
@@ -18,9 +19,16 @@ class GameProvider extends ChangeNotifier {
   GameProvider({required this.columns, required this.rows, required this.totalSquares}) {
     fruitIndex = 0;
     headIndex = 0;
-    initializeSnake(totalSquares);
-    initializeFruit(totalSquares);
+    initializeGame();
     currDirection = Direction.Left;
+    clickedDirection = Direction.Still;
+    runTimer();
+  }
+
+  void runTimer() async {
+    Timer.periodic(Duration(milliseconds: 200), (timer) {
+      changeDirection();
+    });
   }
 
   void initializeGame() {
@@ -34,7 +42,7 @@ class GameProvider extends ChangeNotifier {
       fruitIndex = _random.nextInt(totalSquares);
     } while (snakeBody.contains(fruitIndex));
   }
-
+  
   void initializeSnake(int totalSquares) {
     int row = _random.nextInt(rows);
     int startIndex = row * columns;
@@ -55,10 +63,10 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  void changeDirection(Direction newDirection) {
+  void changeDirection() {
     bool canChangeDirection = false;
 
-    switch (newDirection) {
+    switch (clickedDirection) {
       case Direction.Up:
         if (currDirection != Direction.Down && headIndex >= columns) {
           canChangeDirection = true;
@@ -79,13 +87,15 @@ class GameProvider extends ChangeNotifier {
           canChangeDirection = true;
         }
         break;
+      case Direction.Still:
+        break;
     }
 
     if (canChangeDirection) {
-      currDirection = newDirection;
+      currDirection = clickedDirection;
       moveSnake();
     }
-    print(currDirection.name);
+
   }
 
   void moveSnake() {
@@ -103,6 +113,8 @@ class GameProvider extends ChangeNotifier {
         break;
       case Direction.Right:
         newHeadIndex = headIndex + 1;
+        break;
+      case Direction.Still:
         break;
     }
 
