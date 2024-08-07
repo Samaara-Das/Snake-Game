@@ -28,7 +28,7 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Board(columns: game.columns, rows: game.columns, size:400),
+                  Board(columns: game.columns, rows: game.rows, size:400),
                   Controls(
                       onUpPressed: () => game.clickedDirection = Direction.Up,
                       onDownPressed: () => game.clickedDirection = Direction.Down,

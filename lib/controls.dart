@@ -5,20 +5,22 @@ class Controls extends StatelessWidget {
   final VoidCallback onDownPressed;
   final VoidCallback onLeftPressed;
   final VoidCallback onRightPressed;
+  double iconSize;
 
-  const Controls({
+  Controls({
     Key? key,
     required this.onUpPressed,
     required this.onDownPressed,
     required this.onLeftPressed,
     required this.onRightPressed,
+    this.iconSize = 50
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 120,
-      width: 120,
+      height: 150,
+      width: 150,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -26,7 +28,7 @@ class Controls extends StatelessWidget {
             top: 0,
             child: IconButton(
               icon: Icon(Icons.arrow_drop_up),
-              iconSize: 40,
+              iconSize: iconSize,
               onPressed: onUpPressed,
             ),
           ),
@@ -34,7 +36,7 @@ class Controls extends StatelessWidget {
             bottom: 0,
             child: IconButton(
               icon: Icon(Icons.arrow_drop_down),
-              iconSize: 40,
+              iconSize: iconSize,
               onPressed: onDownPressed,
             ),
           ),
@@ -42,7 +44,7 @@ class Controls extends StatelessWidget {
             left: 0,
             child: IconButton(
               icon: Icon(Icons.arrow_left),
-              iconSize: 40,
+              iconSize: iconSize,
               onPressed: onLeftPressed,
             ),
           ),
@@ -50,7 +52,7 @@ class Controls extends StatelessWidget {
             right: 0,
             child: IconButton(
               icon: Icon(Icons.arrow_right),
-              iconSize: 40,
+              iconSize: iconSize,
               onPressed: onRightPressed,
             ),
           ),

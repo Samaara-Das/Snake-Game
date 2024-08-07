@@ -17,22 +17,39 @@ class GameProvider extends ChangeNotifier {
   int rows;
 
   GameProvider({required this.columns, required this.rows, required this.totalSquares}) {
+    totalSquares = columns * rows;
     fruitIndex = 0;
     headIndex = 0;
     initializeGame();
     currDirection = Direction.Left;
     clickedDirection = Direction.Still;
-    runTimer();
+    runChecks();
   }
 
-  void runTimer() async {
-    Timer.periodic(Duration(milliseconds: 200), (timer) {
+  void runChecks() async {
+    // Move the snake in its direction
+    Future.value(Timer.periodic(Duration(milliseconds: 200), (timer) {
       changeDirection();
-    });
+    }));
+
+    // Check if the fruit is eaten
+    Future.value(Timer.periodic(Duration(milliseconds: 100), (timer) {
+      isFruitEaten();
+    }));
+  }
+
+  /// This checks if the fruit has been eaten, makes it disappear and re-appear somewhere else and grows the body of the snake.
+  void isFruitEaten() {
+    if (snakeBody.first == fruitIndex) {
+      // make the snake grow longer
+      growSnake();
+
+      // make the fruit re-appear somewhere else
+      initializeFruit(totalSquares);
+    }
   }
 
   void initializeGame() {
-    int totalSquares = columns * rows;
     initializeFruit(totalSquares);
     initializeSnake(totalSquares);
   }
@@ -121,6 +138,28 @@ class GameProvider extends ChangeNotifier {
     headIndex = newHeadIndex;
     snakeBody.insert(0, headIndex);
     snakeBody.removeLast();
+    notifyListeners();
+  }
+
+  void growSnake() {
+    switch(currDirection) {
+      case Direction.Up:
+        snakeBody.add(snakeBody.last - columns);
+        break;
+      case Direction.Down:
+        snakeBody.add(snakeBody.last + columns);
+        break;
+      case Direction.Left:
+        snakeBody.add(snakeBody.last + 1);
+        break;
+      case Direction.Right:
+        snakeBody.add(snakeBody.last - 1);
+        break;
+      case Direction.Still:
+        break;
+    }
+
+    headIndex = snakeBody.first;
     notifyListeners();
   }
 
