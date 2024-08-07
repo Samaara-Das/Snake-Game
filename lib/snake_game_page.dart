@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'scores.dart';
 import 'board.dart';
 import 'game_provider.dart';
 import 'controls.dart';
@@ -19,7 +20,8 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Snake Game'), centerTitle: true,),
+      appBar: AppBar(title: Text('Snake Game'), actions: scores()),
+
       body: Center(
         child: Consumer<GameProvider>(
           builder: (context, game, child) => Stack(
@@ -28,12 +30,12 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Board(columns: game.columns, rows: game.rows, size:400),
+                  Board(columns: game.columns, rows: game.rows, size: 400),
                   Controls(
-                      onUpPressed: () => game.clickedDirection = Direction.Up,
-                      onDownPressed: () => game.clickedDirection = Direction.Down,
-                      onLeftPressed: () => game.clickedDirection = Direction.Left,
-                      onRightPressed: () => game.clickedDirection = Direction.Right
+                    onUpPressed: () => game.clickedDirection = Direction.Up,
+                    onDownPressed: () => game.clickedDirection = Direction.Down,
+                    onLeftPressed: () => game.clickedDirection = Direction.Left,
+                    onRightPressed: () => game.clickedDirection = Direction.Right
                   )
                 ],
               ),
@@ -45,6 +47,4 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
     );
   }
 }
-
-
 

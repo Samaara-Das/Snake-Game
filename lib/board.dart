@@ -19,15 +19,6 @@ class Board extends StatefulWidget {
 }
 
 class _BoardState extends State<Board> {
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // Use WidgetsBinding.instance.addPostFrameCallback to run code after the first frame
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     context.read<GameProvider>().initializeGame();
-  //   });
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Container(

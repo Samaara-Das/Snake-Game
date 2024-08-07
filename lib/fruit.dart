@@ -7,7 +7,7 @@ class Fruit extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      child: Icon(Icons.star, color: Colors.amber,)
+      child: Icon(Icons.star, color: Colors.amber, size: 40,)
     );
   }
 }

@@ -15,6 +15,10 @@ class GameProvider extends ChangeNotifier {
   List<int> snakeBody = [];
   int columns;
   int rows;
+  /// The current score of the player
+  int score = 0;
+  /// The highest score of the player
+  int highScore = 0;
 
   GameProvider({required this.columns, required this.rows, required this.totalSquares}) {
     totalSquares = columns * rows;
@@ -38,7 +42,7 @@ class GameProvider extends ChangeNotifier {
     }));
   }
 
-  /// This checks if the fruit has been eaten, makes it disappear and re-appear somewhere else and grows the body of the snake.
+  /// If the fruit is eaten the fruit re-appears elsewhere, the snake grows and the score and/or high score increases
   void isFruitEaten() {
     if (snakeBody.first == fruitIndex) {
       // make the snake grow longer
@@ -46,6 +50,10 @@ class GameProvider extends ChangeNotifier {
 
       // make the fruit re-appear somewhere else
       initializeFruit(totalSquares);
+
+      // change the scores
+      score++;
+      if(score > highScore) highScore = score;
     }
   }
 
@@ -85,22 +93,42 @@ class GameProvider extends ChangeNotifier {
 
     switch (clickedDirection) {
       case Direction.Up:
-        if (currDirection != Direction.Down && headIndex >= columns) {
+        if (currDirection != Direction.Down && headIndex >= columns) { // If the up arrow is pressed, change its direction upward unless the snake is moving down
+          canChangeDirection = true;
+          currDirection = clickedDirection;
+        }
+
+        if (currDirection == Direction.Down && headIndex >= columns) { // otherwise, if the up arrow is pressed while the snake is moving down, let it keep moving down
           canChangeDirection = true;
         }
         break;
       case Direction.Down:
-        if (currDirection != Direction.Up && headIndex < columns * (rows - 1)) {
+        if (currDirection != Direction.Up && headIndex < columns * (rows - 1)) { // If the down arrow is pressed, change its direction downward unless the snake is moving up
+          canChangeDirection = true;
+          currDirection = clickedDirection;
+        }
+
+        if (currDirection == Direction.Up && headIndex >= columns) { // otherwise, if the down arrow is pressed while the snake is moving up, let it keep moving up
           canChangeDirection = true;
         }
         break;
       case Direction.Left:
-        if (currDirection != Direction.Right && headIndex % columns != 0) {
+        if (currDirection != Direction.Right && headIndex % columns != 0) { // If the left arrow is pressed, change its direction to the left unless the snake is moving right
+          canChangeDirection = true;
+          currDirection = clickedDirection;
+        }
+
+        if (currDirection == Direction.Right && headIndex >= columns) { // otherwise, if the left arrow is pressed while the snake is moving right, let it keep moving right
           canChangeDirection = true;
         }
         break;
       case Direction.Right:
-        if (currDirection != Direction.Left && (headIndex + 1) % columns != 0) {
+        if (currDirection != Direction.Left && (headIndex + 1) % columns != 0) { // If the right arrow is pressed, change its direction to the right unless the snake is moving left
+          canChangeDirection = true;
+          currDirection = clickedDirection;
+        }
+
+        if (currDirection == Direction.Left && headIndex >= columns) { // otherwise, if the right arrow is pressed while the snake is moving left, let it keep moving left
           canChangeDirection = true;
         }
         break;
@@ -109,8 +137,10 @@ class GameProvider extends ChangeNotifier {
     }
 
     if (canChangeDirection) {
-      currDirection = clickedDirection;
+      print('Snake can now change direction to ${currDirection.name}');
       moveSnake();
+    } else {
+      print('Snake will not change Direction. currDirection: ${currDirection.name}');
     }
 
   }
@@ -144,10 +174,10 @@ class GameProvider extends ChangeNotifier {
   void growSnake() {
     switch(currDirection) {
       case Direction.Up:
-        snakeBody.add(snakeBody.last - columns);
+        snakeBody.add(snakeBody.last + columns);
         break;
       case Direction.Down:
-        snakeBody.add(snakeBody.last + columns);
+        snakeBody.add(snakeBody.last - columns);
         break;
       case Direction.Left:
         snakeBody.add(snakeBody.last + 1);
