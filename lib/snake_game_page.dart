@@ -5,6 +5,7 @@ import 'game_provider.dart';
 import 'controls.dart';
 import 'package:provider/provider.dart';
 import 'start_popup.dart';
+import 'gameover_popup.dart';
 
 class SnakeGamePage extends StatefulWidget {
   const SnakeGamePage({super.key, required this.title});
@@ -36,7 +37,8 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                   )
                 ],
               ),
-              StartPopup()
+              StartPopup(),
+              GameOverPopup()
             ],
           ),
         )
