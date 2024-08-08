@@ -14,7 +14,7 @@ class _StartPopupState extends State<StartPopup> {
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 4), () {
+    Timer(Duration(seconds: 3), () {
       setState(() {
         isVisible = !isVisible;
       });

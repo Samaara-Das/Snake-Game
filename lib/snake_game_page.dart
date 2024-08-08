@@ -15,8 +15,6 @@ class SnakeGamePage extends StatefulWidget {
 }
 
 class _SnakeGamePageState extends State<SnakeGamePage> {
-  bool isVisible = true;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +26,6 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
             alignment: AlignmentDirectional.center,
             children: [
               Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Board(columns: game.columns, rows: game.rows, size: 400),
                   Controls(
