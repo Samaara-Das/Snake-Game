@@ -37,7 +37,7 @@ class _BoardState extends State<Board> {
                   color: Colors.green,
                   border: Border.all(color: Colors.green.shade800, width: 1.5),
                 ),
-                child: game.fruitIndex == index ? Fruit() : game.snakeBody.contains(index) ? game.getSnakePart(index) : null,
+                child: game.fruitIndex == index ? const Fruit() : game.snakeBody.contains(index) ? game.getSnakePart(index) : null,
               );
             },
           );
