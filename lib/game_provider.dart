@@ -19,8 +19,6 @@ class GameProvider extends ChangeNotifier {
   int score = 0;
   /// The highest score of the player
   int highScore = 0;
-  /// Flag which reflects whether the game is over or not
-  bool gameOver = false;
 
   GameProvider({required this.columns, required this.rows, required this.totalSquares}) {
     totalSquares = columns * rows;
@@ -56,34 +54,6 @@ class GameProvider extends ChangeNotifier {
       // change the scores
       score++;
       if(score > highScore) highScore = score;
-    }
-  }
-
-  /// Checks if the game is over if the snake collides with itself or the borders.
-  void isGameOver() {
-
-    if(snakeBody.sublist(1, snakeBody.length).contains(headIndex)) { // If the snake's head has collided with its body
-      gameOver = true;
-    }
-
-    int bottomLeftIndex = (columns*rows)-rows;
-    int bottomRightIndex = (columns*rows)-1;
-
-    // If the snake's head stays on the border of the board for 1 second or more
-    if(currDirection == Direction.Up && headIndex < columns) { // If the snake collided with the upper border of the board
-      gameOver = true;
-    }
-
-    if(currDirection == Direction.Down && snakeBody.first >= bottomLeftIndex && snakeBody.first <= bottomRightIndex) { // If the snake collided with the bottom border of the board
-      gameOver = true;
-    }
-
-    if(currDirection == Direction.Left && headIndex % columns == 0) { // If the snake collided with the left border of the board
-      gameOver = true;
-    }
-
-    if(currDirection == Direction.Right && (headIndex + 1) % columns == 0) { // If the snake collided with the right border of the board
-      gameOver = true;
     }
   }
 
@@ -127,41 +97,29 @@ class GameProvider extends ChangeNotifier {
           canChangeDirection = true;
           currDirection = clickedDirection;
         }
-
-        // if (currDirection == Direction.Down && headIndex >= columns) { // otherwise, if the up arrow is pressed while the snake is moving down, let it keep moving down
-        //   canChangeDirection = true;
-        // }
         break;
+
       case Direction.Down:
         if (currDirection != Direction.Up && headIndex < columns * (rows - 1)) { // If the down arrow is pressed, change its direction downward unless the snake is moving up
           canChangeDirection = true;
           currDirection = clickedDirection;
         }
-
-        // if (currDirection == Direction.Up && headIndex >= columns) { // otherwise, if the down arrow is pressed while the snake is moving up, let it keep moving up
-        //   canChangeDirection = true;
-        // }
         break;
+
       case Direction.Left:
         if (currDirection != Direction.Right && headIndex % columns != 0) { // If the left arrow is pressed, change its direction to the left unless the snake is moving right
           canChangeDirection = true;
           currDirection = clickedDirection;
         }
-
-        // if (currDirection == Direction.Right && headIndex >= columns) { // otherwise, if the left arrow is pressed while the snake is moving right, let it keep moving right
-        //   canChangeDirection = true;
-        // }
         break;
+
       case Direction.Right:
         if (currDirection != Direction.Left && (headIndex + 1) % columns != 0) { // If the right arrow is pressed, change its direction to the right unless the snake is moving left
           canChangeDirection = true;
           currDirection = clickedDirection;
         }
-
-        // if (currDirection == Direction.Left && headIndex >= columns) { // otherwise, if the right arrow is pressed while the snake is moving left, let it keep moving left
-        //   canChangeDirection = true;
-        // }
         break;
+
       case Direction.Still:
         break;
     }
