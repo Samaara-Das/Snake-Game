@@ -20,7 +20,6 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Snake Game'), actions: scores()),
-
       body: Center(
         child: Consumer<GameProvider>(
           builder: (context, game, child) => Stack(
@@ -28,7 +27,7 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
             children: [
               Column(
                 children: [
-                  Board(columns: game.columns, rows: game.rows, size: 400),
+                  Board(columns: game.columns, rows: game.rows),
                   Controls(
                     onUpPressed: () => game.clickedDirection = Direction.Up,
                     onDownPressed: () => game.clickedDirection = Direction.Down,

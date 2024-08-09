@@ -10,7 +10,6 @@ class GameOverPopup extends StatefulWidget {
 }
 
 class _StartPopupState extends State<GameOverPopup> {
-  bool isVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -19,11 +18,23 @@ class _StartPopupState extends State<GameOverPopup> {
       child: Container(
         width: 200,
         height: 100,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          shape: BoxShape.rectangle
-        ),
-        child: const Text('GAME OVER', style: TextStyle(fontSize: 30, color: Colors.amber),),
+        decoration: BoxDecoration(color: Colors.black, shape: BoxShape.rectangle),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('GAME OVER', style: TextStyle(fontSize: 34, color: Colors.amber, fontWeight: FontWeight.w800)),
+            GestureDetector(
+              onTap: () => context.read<GameProvider>().resetGame(),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.restart_alt),
+                  SizedBox(width: 4.0),
+                  Text('Restart Game', style: TextStyle(fontSize: 18, color: Colors.amber)),
+                ]
+              )
+            )
+        ])
       )
     );
   }

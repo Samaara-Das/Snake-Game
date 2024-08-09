@@ -8,9 +8,9 @@ class Board extends StatefulWidget {
   int columns;
   int rows;
   late int totalSquares;
-  double size;
+  double size = 500;
   
-  Board({super.key, required this.columns, required this.rows, required this.size}) {
+  Board({super.key, required this.columns, required this.rows}) {
     totalSquares = rows * columns;
   }
 
@@ -31,17 +31,19 @@ class _BoardState extends State<Board> {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: widget.columns),
             itemCount: widget.totalSquares,
             itemBuilder: (context, index) {
+              bool isBorder = game.borders.contains(index);
+
               return Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.rectangle,
-                  color: Colors.green,
-                  border: Border.all(color: Colors.green.shade800, width: 1.5),
+                  color: isBorder ? Colors.brown[700] : Colors.green,
+                  border: Border.all(color: isBorder ? Colors.brown.shade900 : Colors.green.shade800, width: 1.5),
                 ),
                 child: game.fruitIndex == index ? const Fruit() : game.snakeBody.contains(index) ? game.getSnakePart(index) : null,
               );
             },
           );
-        },
+        }
       ),
     );
   }

@@ -5,7 +5,6 @@ class Controls extends StatelessWidget {
   final VoidCallback onDownPressed;
   final VoidCallback onLeftPressed;
   final VoidCallback onRightPressed;
-  double iconSize;
 
   Controls({
     Key? key,
@@ -13,49 +12,38 @@ class Controls extends StatelessWidget {
     required this.onDownPressed,
     required this.onLeftPressed,
     required this.onRightPressed,
-    this.iconSize = 50
   }) : super(key: key);
+
+  Widget _buildControlBox(String text, VoidCallback onPressed, Color color, double width) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: width,
+        height: 50,
+        color: color,
+        child: Center(child: Text(text, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 150,
-      width: 150,
-      child: Stack(
-        alignment: Alignment.center,
+      height: 200,
+      width: 200,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Positioned(
-            top: 0,
-            child: IconButton(
-              icon: Icon(Icons.arrow_drop_up),
-              iconSize: iconSize,
-              onPressed: onUpPressed,
-            ),
+          _buildControlBox("Up", onUpPressed, Colors.red, 50),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildControlBox("Left", onLeftPressed, Colors.green, 50),
+              _buildControlBox("Right", onRightPressed, Colors.blue, 50),
+            ],
           ),
-          Positioned(
-            bottom: 0,
-            child: IconButton(
-              icon: Icon(Icons.arrow_drop_down),
-              iconSize: iconSize,
-              onPressed: onDownPressed,
-            ),
-          ),
-          Positioned(
-            left: 0,
-            child: IconButton(
-              icon: Icon(Icons.arrow_left),
-              iconSize: iconSize,
-              onPressed: onLeftPressed,
-            ),
-          ),
-          Positioned(
-            right: 0,
-            child: IconButton(
-              icon: Icon(Icons.arrow_right),
-              iconSize: iconSize,
-              onPressed: onRightPressed,
-            ),
-          ),
+          _buildControlBox("Down", onDownPressed, Colors.amber, 50),
         ],
       ),
     );

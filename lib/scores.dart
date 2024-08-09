@@ -4,13 +4,16 @@ import 'game_provider.dart';
 
 List<Widget> scores() {
   return [
-    Row( // Score
-      children: [
-        Icon(Icons.star, color: Colors.amber, size: 24),
-        Consumer<GameProvider>(
-            builder: (context, game, child) => Text('${game.score}')
-        )
-      ],
+    Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Row( // Score
+        children: [
+          Icon(Icons.star, color: Colors.amber, size: 24),
+          Consumer<GameProvider>(
+              builder: (context, game, child) => Text('${game.score}')
+          )
+        ],
+      ),
     ),
 
     SizedBox(width: 20),
