@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snake_game/gameover_popup.dart';
 import 'scores.dart';
 import 'board.dart';
 import 'game_provider.dart';
@@ -36,6 +37,7 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                 ],
               ),
               StartPopup(),
+              GameOverPopup()
             ],
           ),
         )
