@@ -184,31 +184,27 @@ class GameProvider extends ChangeNotifier {
 
     switch (clickedDirection) {
       case Direction.Up:
-        if (currDirection != Direction.Down && headIndex >= columns) { // If the up arrow is pressed, change its direction upward unless the snake is moving down
-          canChangeDirection = true;
-          currDirection = clickedDirection;
-        }
+        // If the up arrow is pressed, change its direction upward unless the snake is moving down
+        if (currDirection != Direction.Down && headIndex >= columns) currDirection = clickedDirection;
+        canChangeDirection = true;
         break;
 
       case Direction.Down:
-        if (currDirection != Direction.Up && headIndex < columns * (rows - 1)) { // If the down arrow is pressed, change its direction downward unless the snake is moving up
-          canChangeDirection = true;
-          currDirection = clickedDirection;
-        }
+        // If the down arrow is pressed, change its direction downward unless the snake is moving up
+        if (currDirection != Direction.Up && headIndex < columns * (rows - 1)) currDirection = clickedDirection;
+        canChangeDirection = true;
         break;
 
       case Direction.Left:
-        if (currDirection != Direction.Right && headIndex % columns != 0) { // If the left arrow is pressed, change its direction to the left unless the snake is moving right
-          canChangeDirection = true;
-          currDirection = clickedDirection;
-        }
+        // If the left arrow is pressed, change its direction to the left unless the snake is moving right
+        if (currDirection != Direction.Right && headIndex % columns != 0) currDirection = clickedDirection;
+        canChangeDirection = true;
         break;
 
       case Direction.Right:
-        if (currDirection != Direction.Left && (headIndex + 1) % columns != 0) { // If the right arrow is pressed, change its direction to the right unless the snake is moving left
-          canChangeDirection = true;
-          currDirection = clickedDirection;
-        }
+        // If the right arrow is pressed, change its direction to the right unless the snake is moving left
+        if (currDirection != Direction.Left && (headIndex + 1) % columns != 0) currDirection = clickedDirection;
+        canChangeDirection = true;
         break;
 
       case Direction.Still:
