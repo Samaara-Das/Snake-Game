@@ -21,28 +21,42 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Snake Game'), actions: scores()),
-      body: Center(
-        child: Consumer<GameProvider>(
-          builder: (context, game, child) => Stack(
-            alignment: AlignmentDirectional.center,
-            children: [
-              Column(
-                children: [
-                  Board(columns: game.columns, rows: game.rows),
-                  Controls(
-                    onUpPressed: () => game.clickedDirection = Direction.Up,
-                    onDownPressed: () => game.clickedDirection = Direction.Down,
-                    onLeftPressed: () => game.clickedDirection = Direction.Left,
-                    onRightPressed: () => game.clickedDirection = Direction.Right
-                  )
-                ],
-              ),
-              StartPopup(),
-              GameOverPopup()
-            ],
+      appBar: AppBar(
+        title: Center(
+          child: Container(
+            width: 500,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [Text('Snake Game'), scores()]
+            ),
           ),
         )
+      ),
+
+      body: Padding(
+        padding: const EdgeInsets.only(top: 15),
+        child: Center(
+          child: Consumer<GameProvider>(
+            builder: (context, game, child) => Stack(
+              alignment: AlignmentDirectional.center,
+              children: [
+                Column(
+                  children: [
+                    Board(columns: game.columns, rows: game.rows),
+                    Controls(
+                      onUpPressed: () => game.clickedDirection = Direction.Up,
+                      onDownPressed: () => game.clickedDirection = Direction.Down,
+                      onLeftPressed: () => game.clickedDirection = Direction.Left,
+                      onRightPressed: () => game.clickedDirection = Direction.Right
+                    )
+                  ],
+                ),
+                StartPopup(),
+                GameOverPopup()
+              ],
+            ),
+          )
+        ),
       ),
     );
   }
