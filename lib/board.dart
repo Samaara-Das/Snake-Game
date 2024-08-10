@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'game_provider.dart';
 import 'fruit.dart';
 
+// This file renders the board which the snake moves on
 
 class Board extends StatefulWidget {
   int columns;

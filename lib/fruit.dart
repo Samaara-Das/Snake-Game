@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+// This renders the "fruit" which the snake will eat
+
 class Fruit extends StatelessWidget {
   const Fruit({super.key});
 

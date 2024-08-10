@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_provider.dart';
 
+// This shows the current score of the player and the high score of the player on the top of the game.
+
 List<Widget> scores() {
   return [
     Padding(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+// This shows a popup only at the start of the game to tell the player what to do
+
 class StartPopup extends StatefulWidget {
   const StartPopup({super.key});
 

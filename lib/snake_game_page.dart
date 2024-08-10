@@ -7,6 +7,8 @@ import 'controls.dart';
 import 'package:provider/provider.dart';
 import 'start_popup.dart';
 
+// This renders the entire game
+
 class SnakeGamePage extends StatefulWidget {
   const SnakeGamePage({super.key, required this.title});
   final String title;

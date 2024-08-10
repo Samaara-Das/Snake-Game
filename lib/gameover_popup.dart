@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'game_provider.dart';
 import 'package:provider/provider.dart';
 
+// This is a "Game Over" popup which shows when the player loses. It shows an option for the player to restart the game.
+
 class GameOverPopup extends StatefulWidget {
   const GameOverPopup({super.key});
 

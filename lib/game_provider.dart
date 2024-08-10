@@ -34,6 +34,7 @@ class GameProvider extends ChangeNotifier {
     runChecks();
   }
 
+  /// Populates the borders list with indexes that make up the border of the game
   void _initializeBorders() {
     // Add the indexes of the boxes on the top and bottom borders
     for (int i = 0; i < columns; i++) {
@@ -51,6 +52,7 @@ class GameProvider extends ChangeNotifier {
     borders = borders.toSet().toList();
   }
 
+  /// Generates a random number from `start` inclusive to `end` inclusive
   int _getRandomNumber({required int start, required int end}) {
     if (start >= end) {
       throw ArgumentError('Start must be less than end');
@@ -60,6 +62,7 @@ class GameProvider extends ChangeNotifier {
     return start + random.nextInt(end - start + 1);
   }
 
+  /// Makes `changeDirection()`, `isFruitEaten()` and `isGameOver()` execute periodically in the background
   void runChecks() {
     moveTimer = Timer.periodic(Duration(milliseconds: 200), (timer) {
       if(!gameOver) changeDirection();
@@ -80,7 +83,7 @@ class GameProvider extends ChangeNotifier {
     gameOverTimer.cancel();
   }
 
-  /// If the fruit is eaten the fruit re-appears elsewhere, the snake grows and the score and/or high score increases
+  /// Checks if the fruit is eaten. If it is, fruit re-appears elsewhere, the snake grows and the score and/or high score increases
   void isFruitEaten() {
     if (headIndex == fruitIndex) {
       // make the snake grow longer
@@ -120,11 +123,13 @@ class GameProvider extends ChangeNotifier {
     runChecks();
   }
 
+  /// Initializes the snake and fruit
   void initializeGame() {
     initializeFruit(totalSquares);
     initializeSnake(totalSquares);
   }
 
+  /// Places the fruit on a random place on the board within the borders
   void initializeFruit(int totalSquares) {
     int attempts = 0;
     do {
@@ -142,6 +147,7 @@ class GameProvider extends ChangeNotifier {
     } while (snakeBody.contains(fruitIndex) || borders.contains(fruitIndex));
   }
 
+  /// Places the snake with 2 body parts on a random place on the board within the borders
   void initializeSnake(int totalSquares) {
     int attempts = 0;
 
@@ -171,6 +177,7 @@ class GameProvider extends ChangeNotifier {
     snakeBody = [headIndex, headIndex + 1, headIndex + 2];
   }
 
+  /// Gets the snake's body part or head based on the value of `index`
   Widget getSnakePart(int index) {
     if (index == headIndex) {
       return const Head();
@@ -179,44 +186,40 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
+  /// Changes the current direction of the snake
   void changeDirection() {
-    bool canChangeDirection = false;
-
     switch (clickedDirection) {
       case Direction.Up:
         // If the up arrow is pressed, change its direction upward unless the snake is moving down
         if (currDirection != Direction.Down && headIndex >= columns) currDirection = clickedDirection;
-        canChangeDirection = true;
+        moveSnake();
         break;
 
       case Direction.Down:
         // If the down arrow is pressed, change its direction downward unless the snake is moving up
         if (currDirection != Direction.Up && headIndex < columns * (rows - 1)) currDirection = clickedDirection;
-        canChangeDirection = true;
+        moveSnake();
         break;
 
       case Direction.Left:
         // If the left arrow is pressed, change its direction to the left unless the snake is moving right
         if (currDirection != Direction.Right && headIndex % columns != 0) currDirection = clickedDirection;
-        canChangeDirection = true;
+        moveSnake();
         break;
 
       case Direction.Right:
         // If the right arrow is pressed, change its direction to the right unless the snake is moving left
         if (currDirection != Direction.Left && (headIndex + 1) % columns != 0) currDirection = clickedDirection;
-        canChangeDirection = true;
+        moveSnake();
         break;
 
       case Direction.Still:
         break;
     }
 
-    if (canChangeDirection) {
-      moveSnake();
-    }
-
   }
 
+  /// Moves the snake in `currDirection`
   void moveSnake() {
     int newHeadIndex = headIndex;
 
@@ -243,6 +246,7 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Makes the snake longer by adding another body part
   void growSnake() {
     switch(currDirection) {
       case Direction.Up:

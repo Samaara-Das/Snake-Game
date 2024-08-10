@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+// This file renders the 4 boxes which are used to change the direction of the snake
+
 class Controls extends StatelessWidget {
   final VoidCallback onUpPressed;
   final VoidCallback onDownPressed;
