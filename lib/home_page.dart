@@ -23,6 +23,7 @@ enum snake_Direction {
 
 class _HomePageState extends State<HomePage> {
   int rowSize = 10;
+  double widthOfGame = 400;
   int totalNumberOfSquares = 100;
   List<int> snakePos = [0, 1, 2];
   int foodPos = 55; // initial food position
@@ -33,8 +34,8 @@ class _HomePageState extends State<HomePage> {
   List<String> highscore_DocIds = [];
   late final Future? letsGetDocIds;
   final FocusNode _focusNode = FocusNode(); // focus node to capture keyboard events
-  bool showHighscoresAtTop = true;
   late bool isWideEnough;
+  String? playerId;
 
   @override
   void dispose() {
@@ -46,21 +47,81 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     letsGetDocIds = getDocId();
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!gameHasStarted) {
+        showInitialDialog();
+      }
+    });
   }
 
-  Future getDocId() async {
+  void showInitialDialog() {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Welcome to Snake Game!', textAlign: TextAlign.center),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Please enter your name to start:'),
+              TextField(controller: _nameController),
+            ],
+          ),
+          actions: [
+            MaterialButton(
+                child: const Text('START'),
+                onPressed: () {
+                  if(_nameController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Please enter your name', style: TextStyle(color: Colors.white)),
+                        backgroundColor: Colors.pink[700]));
+                  } else {
+                    Navigator.pop(context);
+                    initializePlayer();
+                  }
+                },
+                color: Colors.pink
+            )
+          ],
+        )
+    );
+  }
+
+  void initializePlayer() async {
+    var database = FirebaseFirestore.instance;
+
+    // Create a new document for the player with an initial score of 0
+    DocumentReference playerRef = await database.collection('highscores').add({
+      'name': _nameController.text,
+      'score': 0
+    });
+
+    // Store the document ID for later use
+    setState(() {
+      playerId = playerRef.id;
+    });
+  }
+
+  Future<void> getDocId() async {
+    highscore_DocIds = [];  // Clear the list before populating it
     await FirebaseFirestore.instance
-      .collection('highscores')
-      .orderBy('score', descending: true)
-      .limit(10)
-      .get()
-      .then((value) => value.docs.forEach((element) => highscore_DocIds.add(element.reference.id)));
+        .collection('highscores')
+        .where('score', isGreaterThan: 0) // Only get scores greater than 0
+        .orderBy('score', descending: true)
+        .limit(10)
+        .get()
+        .then((value) => value.docs.forEach((element) => highscore_DocIds.add(element.reference.id)));
   }
 
   void startGame() {
-    gameHasStarted = true;
+    if (playerId == null) {
+      showInitialDialog();
+    }
+
     Timer.periodic(const Duration(milliseconds: 200), (timer) {
       setState(() {
+        gameHasStarted = true;
+
         // keep the snake moving
         moveSnake();
 
@@ -68,33 +129,20 @@ class _HomePageState extends State<HomePage> {
         if(gameOver()) {
           timer.cancel();
 
-          // show a dialog
+          // show a GAME OVER dialog
           showDialog(
             context: context,
             barrierDismissible: false, // This prevents closing by clicking outside
             builder: (context) => AlertDialog(
               title: const Text('GAME OVER', textAlign: TextAlign.center),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Your score is $currentScore'),
-                  TextField(controller: _nameController, decoration: const InputDecoration(hintText: 'Enter your name')),
-                ],
-              ),
+              content: Text('Your score is $currentScore'),
               actions: [
                 MaterialButton(
-                  child: const Text('SUBMIT'),
+                  child: const Text('OK'),
                   onPressed: () {
-                    // if the text field is empty, prompt the user to enter their name
-                    if(_nameController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('Please enter your name', style: TextStyle(color: Colors.white)),
-                          backgroundColor: Colors.pink[700]));
-                    } else {
-                      Navigator.pop(context);
-                      submitScore();
-                      newGame();
-                    }
+                    Navigator.pop(context);
+                    submitScore();
+                    newGame();
                   },
                   color: Colors.pink
                 )
@@ -106,20 +154,39 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void submitScore() {
-    // get access to the collection
-    var database = FirebaseFirestore.instance;
+  void submitScore() async {
+    if (playerId != null) {
+      var database = FirebaseFirestore.instance;
 
-    // add data to firebase
-    database.collection('highscores').add({
-      'name': _nameController.text,
-      'score': currentScore
-    });
+      // Get the current document
+      DocumentSnapshot doc = await database.collection('highscores').doc(playerId).get();
+
+      // Check if the document exists and has a score field
+      if (doc.exists && doc.data() is Map<String, dynamic>) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        int previousScore = data['score'] ?? 0;
+
+        // Only update if the new score is higher
+        if (currentScore > previousScore) {
+          await database.collection('highscores').doc(playerId).update({
+            'score': currentScore
+          });
+        }
+      } else {
+        // If the document doesn't exist or doesn't have a score, set the new score
+        await database.collection('highscores').doc(playerId).set({
+          'name': _nameController.text,
+          'score': currentScore
+        });
+      }
+
+      // Refresh the high scores
+      await getDocId();
+      setState(() {}); // Trigger a rebuild to show updated high scores
+    }
   }
 
   Future newGame() async {
-    highscore_DocIds = [];
-    await getDocId();
     setState(() {
       snakePos = [0, 1, 2];
       foodPos = 55;
@@ -209,7 +276,7 @@ class _HomePageState extends State<HomePage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        isWideEnough = screenWidth >= 900;
+        isWideEnough = screenWidth >= 800;
 
         return KeyboardListener(
           focusNode: _focusNode,
@@ -229,109 +296,119 @@ class _HomePageState extends State<HomePage> {
           },
           child: Scaffold(
             backgroundColor: Colors.black,
-            body: _game(),
+            body: _game(isWideEnough),
           )
         );
       }
     );
   }
 
-  Widget _game() {
+  Widget _game(bool isWideEnough) {
     return Center(
-      child: Container(
-        width: 400,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // score
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // current score
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Current Score'),
-                      Text('$currentScore', style: const TextStyle(fontSize: 30))
-                    ],
-                  ),
-                  isWideEnough ? Container() : _buildHighScores(height: 300)
-                ]
-              ),
-            ),
-
-            // game grid and high scores
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  height: 400,
-                  width: 400,
-                  child: GestureDetector(
-                    onVerticalDragUpdate: (details) {
-                      if(details.delta.dy > 0 && currentDirection != snake_Direction.UP) {
-                        currentDirection = snake_Direction.DOWN;
-                      }
-                      if(details.delta.dy < 0 && currentDirection != snake_Direction.DOWN) {
-                        currentDirection = snake_Direction.UP;
-                      }
-                    },
-                    onHorizontalDragUpdate: (details) {
-                      if(details.delta.dx > 0 && currentDirection != snake_Direction.LEFT) {
-                        currentDirection = snake_Direction.RIGHT;
-                      }
-                      if(details.delta.dx < 0 && currentDirection != snake_Direction.RIGHT) {
-                        currentDirection = snake_Direction.LEFT;
-                      }
-                    },
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: rowSize),
-                      itemCount: totalNumberOfSquares,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        if(index == snakePos.last) {
-                          return const HeadPixel();
-                        } else if(snakePos.contains(index)) {
-                          return const SnakePixel();
-                        } else if(index == foodPos) {
-                          return const FoodPixel();
-                        } else {
-                          return const BlankPixel();
-                        }
-                      }
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Current Score
+              Container(
+                width: widthOfGame,
+                child: Row(
+                  mainAxisAlignment: isWideEnough ? MainAxisAlignment.center : MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        Text('Current Score'),
+                        Text('$currentScore', style: const TextStyle(fontSize: 30)),
+                      ]
                     ),
-                  ),
-                ),
-              ]
-            ),
 
-            // play button
-            Expanded(
-              child: Center(
-                child: MaterialButton(
-                  child: const Text('PLAY'),
-                  color: gameHasStarted ? Colors.grey : Colors.pink,
-                  onPressed: gameHasStarted ? null : startGame,
+                    if(!isWideEnough && !gameHasStarted) _buildHighScores(height: 200)
+                  ],
                 ),
               ),
-            ),
-          ]
-        ),
+
+              SizedBox(height: 20),
+              // Game grid
+              Container(
+                height: 400,
+                width: widthOfGame,
+                child: _buildGameGrid(),
+              ),
+              SizedBox(height: 20),
+              // Play button
+              MaterialButton(
+                child: const Text('PLAY'),
+                color: gameHasStarted ? Colors.grey : Colors.pink,
+                onPressed: gameHasStarted ? null : startGame,
+              ),
+            ],
+          ),
+          if (isWideEnough)
+            SizedBox(width: 20),
+          if (isWideEnough && !gameHasStarted)
+            _buildHighScores(height: 400),
+        ],
       ),
     );
   }
 
-  Widget _buildHighScores({height}) {
+  Widget _buildGameGrid() {
+    return GestureDetector(
+      onVerticalDragUpdate: (details) {
+        if(details.delta.dy > 0 && currentDirection != snake_Direction.UP) {
+          currentDirection = snake_Direction.DOWN;
+        }
+        if(details.delta.dy < 0 && currentDirection != snake_Direction.DOWN) {
+          currentDirection = snake_Direction.UP;
+        }
+      },
+      onHorizontalDragUpdate: (details) {
+        if(details.delta.dx > 0 && currentDirection != snake_Direction.LEFT) {
+          currentDirection = snake_Direction.RIGHT;
+        }
+        if(details.delta.dx < 0 && currentDirection != snake_Direction.RIGHT) {
+          currentDirection = snake_Direction.LEFT;
+        }
+      },
+      child: GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: rowSize),
+          itemCount: totalNumberOfSquares,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            if(index == snakePos.last) {
+              return const HeadPixel();
+            } else if(snakePos.contains(index)) {
+              return const SnakePixel();
+            } else if(index == foodPos) {
+              return const FoodPixel();
+            } else {
+              return const BlankPixel();
+            }
+          }
+      ),
+    );
+  }
+
+  Widget _buildHighScores({required double height}) {
     return Container(
       width: 200,
+      padding: EdgeInsets.all(8),
       height: height,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.amberAccent, width: 2, strokeAlign: BorderSide.strokeAlignOutside)
+          border: Border.all(color: Colors.amberAccent, width: 2, strokeAlign: BorderSide.strokeAlignOutside)
       ),
       child: FutureBuilder(
-        future: letsGetDocIds,
-        builder: (context, snapshot) => Highscores(highscore_DocIds: highscore_DocIds),
+        future: getDocId(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return Highscores(highscore_DocIds: highscore_DocIds);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
       ),
     );
   }
