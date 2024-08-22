@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:myapp/highscore_tile.dart';
 
 import 'blank_pixel.dart';
 import 'head_pixel.dart';
@@ -27,6 +30,30 @@ class _HomePageState extends State<HomePage> {
   int currentScore = 0; // initial snake direction
   bool gameHasStarted = false;
   TextEditingController _nameController = TextEditingController();
+  List<String> highscore_DocIds = [];
+  late final Future? letsGetDocIds;
+  final FocusNode _focusNode = FocusNode(); // focus node to capture keyboard events
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    letsGetDocIds = getDocId();
+    super.initState();
+  }
+
+  Future getDocId() async {
+    await FirebaseFirestore.instance
+      .collection('highscores')
+      .orderBy('score', descending: true)
+      .limit(10)
+      .get()
+      .then((value) => value.docs.forEach((element) => highscore_DocIds.add(element.reference.id)));
+  }
 
   void startGame() {
     gameHasStarted = true;
@@ -40,37 +67,57 @@ class _HomePageState extends State<HomePage> {
           timer.cancel();
 
           // show a dialog
-          showDialog(context: context, builder: (context) => AlertDialog(
-            title: const Text('GAME OVER'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Your score is $currentScore'),
-                TextField(controller: _nameController, decoration: const InputDecoration(hintText: 'Enter your name')),
+          showDialog(
+            context: context,
+            barrierDismissible: false, // This prevents closing by clicking outside
+            builder: (context) => AlertDialog(
+              title: const Text('GAME OVER', textAlign: TextAlign.center),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Your score is $currentScore'),
+                  TextField(controller: _nameController, decoration: const InputDecoration(hintText: 'Enter your name')),
+                ],
+              ),
+              actions: [
+                MaterialButton(
+                  child: const Text('SUBMIT'),
+                  onPressed: () {
+                    // if the text field is empty, prompt the user to enter their name
+                    if(_nameController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Please enter your name', style: TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.pink[700]));
+                    } else {
+                      Navigator.pop(context);
+                      submitScore();
+                      newGame();
+                    }
+                  },
+                  color: Colors.pink
+                )
               ],
-            ),
-            actions: [
-              MaterialButton(
-                child: const Text('SUBMIT'), 
-                onPressed: () {
-                  Navigator.pop(context);
-                  submitScore();
-                  newGame();
-                },
-                color: Colors.pink
-              )
-            ],
-          ));
+            )
+          );
         }
       });
     });
   }
 
   void submitScore() {
+    // get access to the collection
+    var database = FirebaseFirestore.instance;
 
+    // add data to firebase
+    database.collection('highscores').add({
+      'name': _nameController.text,
+      'score': currentScore
+    });
   }
 
-  void newGame() {
+  Future newGame() async {
+    highscore_DocIds = [];
+    await getDocId();
     setState(() {
       snakePos = [0, 1, 2];
       foodPos = 55;
@@ -156,88 +203,117 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: SizedBox(
-          width: screenWidth > 400 ? 400:screenWidth,
-          child: Column(
-            children: [
-              // high score
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Current Score'),
-                        Text('$currentScore', style: const TextStyle(fontSize: 30))
-                      ],
-                    ),
-                    const Text('high score...')
-                  ],
+    return KeyboardListener(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: (event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown && currentDirection != snake_Direction.UP) {
+            currentDirection = snake_Direction.DOWN;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp && currentDirection != snake_Direction.DOWN) {
+            currentDirection = snake_Direction.UP;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft && currentDirection != snake_Direction.RIGHT) {
+            currentDirection = snake_Direction.LEFT;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight && currentDirection != snake_Direction.LEFT) {
+            currentDirection = snake_Direction.RIGHT;
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: SizedBox(
+            width: screenWidth > 400 ? 400:screenWidth,
+            child: Column(
+              children: [
+                // scores
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('Current Score'),
+                            Text('$currentScore', style: const TextStyle(fontSize: 30))
+                          ],
+                        ),
+                      ),
+
+                      // show the top high scores
+                      Expanded(
+                        child: gameHasStarted ? Container() : FutureBuilder(
+                          future: letsGetDocIds,
+                          builder: (context, snapshot) => ListView.builder(
+                            itemCount: highscore_DocIds.length,
+                            itemBuilder: (context, index) => HighscoreTile(
+                                documentId: highscore_DocIds[index])
+                          )
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-              ),
-          
-              // game grid
-              Expanded(
-                flex: 4,
-                child: GestureDetector(
-                  onVerticalDragUpdate: (details) {
-                    if(details.delta.dy > 0 && currentDirection != snake_Direction.UP) {
-                      currentDirection = snake_Direction.DOWN;
-                    }
-                    if(details.delta.dy < 0 && currentDirection != snake_Direction.DOWN) {
-                      currentDirection = snake_Direction.UP;
-                    }
-                  },
-                  onHorizontalDragUpdate: (details) {
-                    if(details.delta.dx > 0 && currentDirection != snake_Direction.LEFT) {
-                      currentDirection = snake_Direction.RIGHT;
-                    }
-                    if(details.delta.dx < 0 && currentDirection != snake_Direction.RIGHT) {
-                      currentDirection = snake_Direction.LEFT;
-                    }
-                  },
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: rowSize), 
-                    itemCount: totalNumberOfSquares,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      if(index == snakePos.last) {
-                        return const HeadPixel();
-                      } else if(snakePos.contains(index)) {
-                        return const SnakePixel();
-                      }  else if(index == foodPos) {
-                        return const FoodPixel();
-                      } else {
-                        return const BlankPixel();
+
+                // game grid
+                Expanded(
+                  flex: 3,
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (details) {
+                      if(details.delta.dy > 0 && currentDirection != snake_Direction.UP) {
+                        currentDirection = snake_Direction.DOWN;
                       }
-                    }
-                  ),
-                ),
-              ),
-          
-              // play button
-              Expanded(
-                child: Container(
-                  child: Center(
-                    child: MaterialButton(
-                      child: const Text('PLAY'),
-                      color: gameHasStarted ? Colors.grey : Colors.pink,
-                      onPressed: gameHasStarted ? null : startGame,
+                      if(details.delta.dy < 0 && currentDirection != snake_Direction.DOWN) {
+                        currentDirection = snake_Direction.UP;
+                      }
+                    },
+                    onHorizontalDragUpdate: (details) {
+                      if(details.delta.dx > 0 && currentDirection != snake_Direction.LEFT) {
+                        currentDirection = snake_Direction.RIGHT;
+                      }
+                      if(details.delta.dx < 0 && currentDirection != snake_Direction.RIGHT) {
+                        currentDirection = snake_Direction.LEFT;
+                      }
+                    },
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: rowSize),
+                      itemCount: totalNumberOfSquares,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        if(index == snakePos.last) {
+                          return const HeadPixel();
+                        } else if(snakePos.contains(index)) {
+                          return const SnakePixel();
+                        }  else if(index == foodPos) {
+                          return const FoodPixel();
+                        } else {
+                          return const BlankPixel();
+                        }
+                      }
                     ),
                   ),
                 ),
-              ),
-            ]
+
+                // play button
+                Expanded(
+                  child: Container(
+                    child: Center(
+                      child: MaterialButton(
+                        child: const Text('PLAY'),
+                        color: gameHasStarted ? Colors.grey : Colors.pink,
+                        onPressed: gameHasStarted ? null : startGame,
+                      ),
+                    ),
+                  ),
+                ),
+              ]
+            ),
           ),
-        ),
-      )
+        )
+      ),
     );
   }
-
   
 }
 
