@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:myapp/highscore_tile.dart';
 
+import 'highscores.dart';
 import 'blank_pixel.dart';
 import 'head_pixel.dart';
 import 'snake_pixel.dart';
@@ -25,14 +25,16 @@ class _HomePageState extends State<HomePage> {
   int rowSize = 10;
   int totalNumberOfSquares = 100;
   List<int> snakePos = [0, 1, 2];
-  int foodPos = 55;
-  snake_Direction currentDirection = snake_Direction.RIGHT;
-  int currentScore = 0; // initial snake direction
+  int foodPos = 55; // initial food position
+  snake_Direction currentDirection = snake_Direction.RIGHT; // initial snake direction
+  int currentScore = 0;
   bool gameHasStarted = false;
   TextEditingController _nameController = TextEditingController();
   List<String> highscore_DocIds = [];
   late final Future? letsGetDocIds;
   final FocusNode _focusNode = FocusNode(); // focus node to capture keyboard events
+  bool showHighscoresAtTop = true;
+  late bool isWideEnough;
 
   @override
   void dispose() {
@@ -203,62 +205,69 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    return KeyboardListener(
-      focusNode: _focusNode,
-      autofocus: true,
-      onKeyEvent: (event) {
-        if (event is KeyDownEvent) {
-          if (event.logicalKey == LogicalKeyboardKey.arrowDown && currentDirection != snake_Direction.UP) {
-            currentDirection = snake_Direction.DOWN;
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp && currentDirection != snake_Direction.DOWN) {
-            currentDirection = snake_Direction.UP;
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft && currentDirection != snake_Direction.RIGHT) {
-            currentDirection = snake_Direction.LEFT;
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight && currentDirection != snake_Direction.LEFT) {
-            currentDirection = snake_Direction.RIGHT;
-          }
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: SizedBox(
-            width: screenWidth > 400 ? 400:screenWidth,
-            child: Column(
-              children: [
-                // scores
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text('Current Score'),
-                            Text('$currentScore', style: const TextStyle(fontSize: 30))
-                          ],
-                        ),
-                      ),
 
-                      // show the top high scores
-                      Expanded(
-                        child: gameHasStarted ? Container() : FutureBuilder(
-                          future: letsGetDocIds,
-                          builder: (context, snapshot) => ListView.builder(
-                            itemCount: highscore_DocIds.length,
-                            itemBuilder: (context, index) => HighscoreTile(
-                                documentId: highscore_DocIds[index])
-                          )
-                        ),
-                      )
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        isWideEnough = screenWidth >= 900;
+
+        return KeyboardListener(
+          focusNode: _focusNode,
+          autofocus: true,
+          onKeyEvent: (event) {
+            if (event is KeyDownEvent) {
+              if (event.logicalKey == LogicalKeyboardKey.arrowDown && currentDirection != snake_Direction.UP) {
+                currentDirection = snake_Direction.DOWN;
+              } else if (event.logicalKey == LogicalKeyboardKey.arrowUp && currentDirection != snake_Direction.DOWN) {
+                currentDirection = snake_Direction.UP;
+              } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft && currentDirection != snake_Direction.RIGHT) {
+                currentDirection = snake_Direction.LEFT;
+              } else if (event.logicalKey == LogicalKeyboardKey.arrowRight && currentDirection != snake_Direction.LEFT) {
+                currentDirection = snake_Direction.RIGHT;
+              }
+            }
+          },
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: _game(),
+          )
+        );
+      }
+    );
+  }
+
+  Widget _game() {
+    return Center(
+      child: Container(
+        width: 400,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // score
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // current score
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Current Score'),
+                      Text('$currentScore', style: const TextStyle(fontSize: 30))
                     ],
                   ),
-                ),
+                  isWideEnough ? Container() : _buildHighScores(height: 300)
+                ]
+              ),
+            ),
 
-                // game grid
-                Expanded(
-                  flex: 3,
+            // game grid and high scores
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  height: 400,
+                  width: 400,
                   child: GestureDetector(
                     onVerticalDragUpdate: (details) {
                       if(details.delta.dy > 0 && currentDirection != snake_Direction.UP) {
@@ -285,7 +294,7 @@ class _HomePageState extends State<HomePage> {
                           return const HeadPixel();
                         } else if(snakePos.contains(index)) {
                           return const SnakePixel();
-                        }  else if(index == foodPos) {
+                        } else if(index == foodPos) {
                           return const FoodPixel();
                         } else {
                           return const BlankPixel();
@@ -294,26 +303,37 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-
-                // play button
-                Expanded(
-                  child: Container(
-                    child: Center(
-                      child: MaterialButton(
-                        child: const Text('PLAY'),
-                        color: gameHasStarted ? Colors.grey : Colors.pink,
-                        onPressed: gameHasStarted ? null : startGame,
-                      ),
-                    ),
-                  ),
-                ),
               ]
             ),
-          ),
-        )
+
+            // play button
+            Expanded(
+              child: Center(
+                child: MaterialButton(
+                  child: const Text('PLAY'),
+                  color: gameHasStarted ? Colors.grey : Colors.pink,
+                  onPressed: gameHasStarted ? null : startGame,
+                ),
+              ),
+            ),
+          ]
+        ),
       ),
     );
   }
-  
+
+  Widget _buildHighScores({height}) {
+    return Container(
+      width: 200,
+      height: height,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.amberAccent, width: 2, strokeAlign: BorderSide.strokeAlignOutside)
+      ),
+      child: FutureBuilder(
+        future: letsGetDocIds,
+        builder: (context, snapshot) => Highscores(highscore_DocIds: highscore_DocIds),
+      ),
+    );
+  }
 }
 
